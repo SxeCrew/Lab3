@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>App.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user-service</a> &gt; <a href="index.source.html" class="el_package">com.example.userservice</a> &gt; <span class="el_source">App.java</span></div><h1>App.java</h1><pre class="source lang-java linenums">package com.example.userservice;
+
+import com.example.userservice.model.User;
+import com.example.userservice.service.UserService;
+import com.example.userservice.util.HibernateUtil;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Scanner;
+
+public class App {
+    private final UserService userService;
+    private final Scanner scanner;
+
+<span class="nc" id="L15">    public App() {</span>
+<span class="nc" id="L16">        this.userService = new UserService();</span>
+<span class="nc" id="L17">        this.scanner = new Scanner(System.in);</span>
+<span class="nc" id="L18">    }</span>
+
+<span class="fc" id="L20">    public App(UserService userService) {</span>
+<span class="fc" id="L21">        this.userService = userService;</span>
+<span class="fc" id="L22">        this.scanner = new Scanner(System.in);</span>
+<span class="fc" id="L23">    }</span>
+
+    public void start() {
+<span class="fc" id="L26">        System.out.println(&quot;Starting User Service application&quot;);</span>
+
+        try {
+<span class="fc" id="L29">            Runtime.getRuntime().addShutdownHook(new Thread(() -&gt; {</span>
+<span class="fc" id="L30">                System.out.println(&quot;Shutdown hook triggered&quot;);</span>
+<span class="fc" id="L31">                HibernateUtil.shutdown();</span>
+<span class="fc" id="L32">                scanner.close();</span>
+<span class="fc" id="L33">            }));</span>
+
+<span class="fc" id="L35">            System.out.println(&quot;=== User Service ===&quot;);</span>
+<span class="fc" id="L36">            boolean running = true;</span>
+
+<span class="fc bfc" id="L38" title="All 2 branches covered.">            while (running) {</span>
+<span class="fc" id="L39">                printMenu();</span>
+<span class="fc" id="L40">                String choice = scanner.nextLine().trim();</span>
+
+<span class="fc bfc" id="L42" title="All 9 branches covered.">                switch (choice) {</span>
+<span class="fc" id="L43">                    case &quot;1&quot; -&gt; createUser();</span>
+<span class="fc" id="L44">                    case &quot;2&quot; -&gt; listUsers();</span>
+<span class="fc" id="L45">                    case &quot;3&quot; -&gt; getUserById();</span>
+<span class="fc" id="L46">                    case &quot;4&quot; -&gt; getUserByEmail();</span>
+<span class="fc" id="L47">                    case &quot;5&quot; -&gt; updateUser();</span>
+<span class="fc" id="L48">                    case &quot;6&quot; -&gt; deleteUser();</span>
+<span class="fc" id="L49">                    case &quot;7&quot; -&gt; showStatistics();</span>
+                    case &quot;0&quot; -&gt; {
+<span class="fc" id="L51">                        running = false;</span>
+<span class="fc" id="L52">                        System.out.println(&quot;Exiting...&quot;);</span>
+<span class="fc" id="L53">                    }</span>
+<span class="fc" id="L54">                    default -&gt; System.out.println(&quot;Invalid option. Please try again.&quot;);</span>
+                }
+<span class="fc" id="L56">            }</span>
+
+<span class="nc" id="L58">        } catch (Exception e) {</span>
+<span class="nc" id="L59">            System.out.println(&quot;Critical error occurred: &quot; + e.getMessage());</span>
+        } finally {
+<span class="fc" id="L61">            HibernateUtil.shutdown();</span>
+<span class="fc" id="L62">            scanner.close();</span>
+<span class="fc" id="L63">            System.out.println(&quot;User Service application stopped&quot;);</span>
+        }
+<span class="fc" id="L65">    }</span>
+
+    public static void main(String[] args) {
+<span class="nc" id="L68">        new App().start();</span>
+<span class="nc" id="L69">    }</span>
+
+    void printMenu() {
+<span class="fc" id="L72">        System.out.println(&quot;\n&quot; + &quot;=&quot;.repeat(40));</span>
+<span class="fc" id="L73">        System.out.println(&quot;            USER SERVICE MENU&quot;);</span>
+<span class="fc" id="L74">        System.out.println(&quot;=&quot;.repeat(40));</span>
+<span class="fc" id="L75">        System.out.println(&quot;1. Create user&quot;);</span>
+<span class="fc" id="L76">        System.out.println(&quot;2. List all users&quot;);</span>
+<span class="fc" id="L77">        System.out.println(&quot;3. Get user by ID&quot;);</span>
+<span class="fc" id="L78">        System.out.println(&quot;4. Get user by Email&quot;);</span>
+<span class="fc" id="L79">        System.out.println(&quot;5. Update user&quot;);</span>
+<span class="fc" id="L80">        System.out.println(&quot;6. Delete user&quot;);</span>
+<span class="fc" id="L81">        System.out.println(&quot;7. Statistics&quot;);</span>
+<span class="fc" id="L82">        System.out.println(&quot;0. Exit&quot;);</span>
+<span class="fc" id="L83">        System.out.println(&quot;-&quot;.repeat(40));</span>
+<span class="fc" id="L84">        System.out.print(&quot;Your choice: &quot;);</span>
+<span class="fc" id="L85">    }</span>
+
+    void createUser() {
+        try {
+<span class="fc" id="L89">            System.out.println(&quot;\n--- Create New User ---&quot;);</span>
+
+<span class="fc" id="L91">            String name = getNonEmptyInput(&quot;Name: &quot;);</span>
+<span class="fc" id="L92">            String email = getNonEmptyInput(&quot;Email: &quot;);</span>
+<span class="fc" id="L93">            Integer age = getAgeInput();</span>
+
+<span class="fc" id="L95">            User user = userService.createUser(name, email, age);</span>
+<span class="fc" id="L96">            System.out.println(&quot;User created successfully!&quot;);</span>
+<span class="fc" id="L97">            System.out.println(&quot;Created: &quot; + user);</span>
+
+<span class="fc" id="L99">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L100">            System.out.println(&quot;Error: &quot; + e.getMessage());</span>
+<span class="fc" id="L101">        }</span>
+<span class="fc" id="L102">    }</span>
+
+    void listUsers() {
+        try {
+<span class="fc" id="L106">            System.out.println(&quot;\n--- All Users ---&quot;);</span>
+<span class="fc" id="L107">            List&lt;User&gt; users = userService.getAllUsers();</span>
+
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">            if (users.isEmpty()) {</span>
+<span class="fc" id="L110">                System.out.println(&quot;No users found.&quot;);</span>
+            } else {
+<span class="nc" id="L112">                System.out.printf(&quot;Found %d user(s):\n&quot;, users.size());</span>
+<span class="nc" id="L113">                users.forEach(System.out::println);</span>
+            }
+
+<span class="nc" id="L116">        } catch (Exception e) {</span>
+<span class="nc" id="L117">            System.out.println(&quot;Error retrieving users: &quot; + e.getMessage());</span>
+<span class="fc" id="L118">        }</span>
+<span class="fc" id="L119">    }</span>
+
+    void getUserById() {
+        try {
+<span class="fc" id="L123">            System.out.println(&quot;\n--- Find User by ID ---&quot;);</span>
+<span class="fc" id="L124">            Long id = getLongInput(&quot;Enter user ID: &quot;);</span>
+
+<span class="fc" id="L126">            User user = userService.getUserById(id);</span>
+<span class="fc" id="L127">            System.out.println(&quot;User found:&quot;);</span>
+<span class="fc" id="L128">            System.out.println(&quot;  &quot; + user);</span>
+
+<span class="fc" id="L130">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L131">            System.out.println(e.getMessage());</span>
+<span class="nc" id="L132">        } catch (Exception e) {</span>
+<span class="nc" id="L133">            System.out.println(&quot;Error finding user: &quot; + e.getMessage());</span>
+<span class="fc" id="L134">        }</span>
+<span class="fc" id="L135">    }</span>
+
+    void getUserByEmail() {
+        try {
+<span class="fc" id="L139">            System.out.println(&quot;\n--- Find User by Email ---&quot;);</span>
+<span class="fc" id="L140">            String email = getNonEmptyInput(&quot;Enter email: &quot;);</span>
+
+<span class="fc" id="L142">            Optional&lt;User&gt; userOpt = userService.findUserByEmail(email);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">            if (userOpt.isPresent()) {</span>
+<span class="nc" id="L144">                System.out.println(&quot;User found:&quot;);</span>
+<span class="nc" id="L145">                System.out.println(&quot;  &quot; + userOpt.get());</span>
+            } else {
+<span class="fc" id="L147">                System.out.println(&quot;User not found with email: &quot; + email);</span>
+            }
+
+<span class="nc" id="L150">        } catch (Exception e) {</span>
+<span class="nc" id="L151">            System.out.println(&quot;Error finding user: &quot; + e.getMessage());</span>
+<span class="fc" id="L152">        }</span>
+<span class="fc" id="L153">    }</span>
+
+    void updateUser() {
+        try {
+<span class="fc" id="L157">            System.out.println(&quot;\n--- Update User ---&quot;);</span>
+<span class="fc" id="L158">            Long id = getLongInput(&quot;Enter user ID to update: &quot;);</span>
+
+<span class="fc" id="L160">            User existingUser = userService.getUserById(id);</span>
+<span class="fc" id="L161">            System.out.println(&quot;Current user data: &quot; + existingUser);</span>
+
+<span class="fc" id="L163">            System.out.println(&quot;\nEnter new values (press Enter to keep current):&quot;);</span>
+<span class="fc" id="L164">            System.out.print(&quot;New name (&quot; + existingUser.getName() + &quot;): &quot;);</span>
+<span class="fc" id="L165">            String name = scanner.nextLine().trim();</span>
+
+<span class="fc" id="L167">            System.out.print(&quot;New email (&quot; + existingUser.getEmail() + &quot;): &quot;);</span>
+<span class="fc" id="L168">            String email = scanner.nextLine().trim();</span>
+
+<span class="fc" id="L170">            System.out.print(&quot;New age (&quot; + existingUser.getAge() + &quot;): &quot;);</span>
+<span class="fc" id="L171">            String ageStr = scanner.nextLine().trim();</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">            Integer age = ageStr.isEmpty() ? null : Integer.parseInt(ageStr);</span>
+
+<span class="fc" id="L174">            User updatedUser = userService.updateUser(id,</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                    name.isEmpty() ? null : name,</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">                    email.isEmpty() ? null : email,</span>
+                    age);
+
+<span class="fc" id="L179">            System.out.println(&quot;User updated successfully!&quot;);</span>
+<span class="fc" id="L180">            System.out.println(&quot;Updated: &quot; + updatedUser);</span>
+
+<span class="nc" id="L182">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L183">            System.out.println(&quot;Invalid age format. Please enter a number.&quot;);</span>
+<span class="nc" id="L184">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L185">            System.out.println(e.getMessage());</span>
+<span class="pc" id="L186">        }</span>
+<span class="fc" id="L187">    }</span>
+
+    void deleteUser() {
+        try {
+<span class="fc" id="L191">            System.out.println(&quot;\n--- Delete User ---&quot;);</span>
+<span class="fc" id="L192">            Long id = getLongInput(&quot;Enter user ID to delete: &quot;);</span>
+
+<span class="fc" id="L194">            User user = userService.getUserById(id);</span>
+<span class="fc" id="L195">            System.out.println(&quot;You are about to delete:&quot;);</span>
+<span class="fc" id="L196">            System.out.println(&quot;  &quot; + user);</span>
+
+<span class="fc" id="L198">            System.out.print(&quot;Are you sure? Type 'DELETE' to confirm: &quot;);</span>
+<span class="fc" id="L199">            String confirmation = scanner.nextLine().trim();</span>
+
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            if (&quot;DELETE&quot;.equalsIgnoreCase(confirmation)) {</span>
+<span class="fc" id="L202">                boolean deleted = userService.deleteUser(id);</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">                if (deleted) {</span>
+<span class="fc" id="L204">                    System.out.println(&quot;User deleted successfully!&quot;);</span>
+                } else {
+<span class="nc" id="L206">                    System.out.println(&quot;Failed to delete user.&quot;);</span>
+                }
+<span class="fc" id="L208">            } else {</span>
+<span class="fc" id="L209">                System.out.println(&quot;Deletion cancelled.&quot;);</span>
+            }
+
+<span class="nc" id="L212">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L213">            System.out.println(e.getMessage());</span>
+<span class="nc" id="L214">        } catch (Exception e) {</span>
+<span class="nc" id="L215">            System.out.println(&quot;Error deleting user: &quot; + e.getMessage());</span>
+<span class="pc" id="L216">        }</span>
+<span class="fc" id="L217">    }</span>
+
+    void showStatistics() {
+        try {
+<span class="fc" id="L221">            System.out.println(&quot;\n--- Statistics ---&quot;);</span>
+<span class="fc" id="L222">            long userCount = userService.getUserCount();</span>
+<span class="fc" id="L223">            System.out.printf(&quot;Total users in database: %d\n&quot;, userCount);</span>
+
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">            if (userCount &gt; 0) {</span>
+<span class="nc" id="L226">                List&lt;User&gt; recentUsers = userService.getUsersWithPagination(1, 5);</span>
+<span class="nc" id="L227">                System.out.println(&quot;Recent users:&quot;);</span>
+<span class="nc" id="L228">                recentUsers.forEach(user -&gt; System.out.println(&quot;  - &quot; + user));</span>
+            }
+
+<span class="nc" id="L231">        } catch (Exception e) {</span>
+<span class="nc" id="L232">            System.out.println(&quot;Error retrieving statistics: &quot; + e.getMessage());</span>
+<span class="fc" id="L233">        }</span>
+<span class="fc" id="L234">    }</span>
+
+    String getNonEmptyInput(String prompt) {
+        while (true) {
+<span class="fc" id="L238">            System.out.print(prompt);</span>
+<span class="fc" id="L239">            String input = scanner.nextLine().trim();</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">            if (!input.isEmpty()) {</span>
+<span class="fc" id="L241">                return input;</span>
+            }
+<span class="nc" id="L243">            System.out.println(&quot;This field cannot be empty. Please try again.&quot;);</span>
+<span class="nc" id="L244">        }</span>
+    }
+
+    Integer getAgeInput() {
+        while (true) {
+<span class="fc" id="L249">            System.out.print(&quot;Age (optional, press Enter to skip): &quot;);</span>
+<span class="fc" id="L250">            String input = scanner.nextLine().trim();</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">            if (input.isEmpty()) {</span>
+<span class="nc" id="L252">                return null;</span>
+            }
+            try {
+<span class="fc" id="L255">                int age = Integer.parseInt(input);</span>
+<span class="pc bpc" id="L256" title="2 of 4 branches missed.">                if (age &lt; 0 || age &gt; 150) {</span>
+<span class="nc" id="L257">                    System.out.println(&quot;Age must be between 0 and 150. Please try again.&quot;);</span>
+<span class="nc" id="L258">                    continue;</span>
+                }
+<span class="fc" id="L260">                return age;</span>
+<span class="nc" id="L261">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L262">                System.out.println(&quot;Please enter a valid number for age.&quot;);</span>
+            }
+<span class="nc" id="L264">        }</span>
+    }
+
+    Long getLongInput(String prompt) {
+        while (true) {
+<span class="fc" id="L269">            System.out.print(prompt);</span>
+<span class="fc" id="L270">            String input = scanner.nextLine().trim();</span>
+            try {
+<span class="fc" id="L272">                return Long.parseLong(input);</span>
+<span class="nc" id="L273">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L274">                System.out.println(&quot;Please enter a valid number.&quot;);</span>
+            }
+<span class="nc" id="L276">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

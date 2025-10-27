@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDaoImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user-service</a> &gt; <a href="index.source.html" class="el_package">com.example.userservice.dao</a> &gt; <span class="el_source">UserDaoImpl.java</span></div><h1>UserDaoImpl.java</h1><pre class="source lang-java linenums">package com.example.userservice.dao;
+
+import com.example.userservice.model.User;
+import com.example.userservice.util.HibernateUtil;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Optional;
+
+<span class="fc" id="L14">public class UserDaoImpl implements UserDao {</span>
+<span class="fc" id="L15">    private static final Logger logger = LoggerFactory.getLogger(UserDaoImpl.class);</span>
+
+    @Override
+    public User save(User user) {
+<span class="fc" id="L19">        logger.debug(&quot;Attempting to save user: {}&quot;, user.getEmail());</span>
+<span class="fc" id="L20">        Transaction tx = null;</span>
+<span class="fc" id="L21">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L22">            tx = session.beginTransaction();</span>
+<span class="fc" id="L23">            session.persist(user);</span>
+<span class="fc" id="L24">            tx.commit();</span>
+<span class="fc" id="L25">            logger.info(&quot;User saved successfully with ID: {}&quot;, user.getId());</span>
+<span class="fc" id="L26">            return user;</span>
+<span class="nc" id="L27">        } catch (ConstraintViolationException e) {</span>
+<span class="nc bnc" id="L28" title="All 4 branches missed.">            if (tx != null &amp;&amp; tx.isActive()) {</span>
+<span class="nc" id="L29">                tx.rollback();</span>
+            }
+<span class="nc" id="L31">            logger.error(&quot;Constraint violation while saving user: {}&quot;, user.getEmail(), e);</span>
+<span class="nc" id="L32">            throw new RuntimeException(&quot;Email already exists: &quot; + user.getEmail(), e);</span>
+<span class="fc" id="L33">        } catch (Exception e) {</span>
+<span class="pc bpc" id="L34" title="2 of 4 branches missed.">            if (tx != null &amp;&amp; tx.isActive()) {</span>
+<span class="fc" id="L35">                tx.rollback();</span>
+            }
+<span class="fc" id="L37">            logger.error(&quot;Error saving user: {}&quot;, user.getEmail(), e);</span>
+<span class="fc" id="L38">            throw new RuntimeException(&quot;Failed to save user: &quot; + e.getMessage(), e);</span>
+        }
+    }
+
+    @Override
+    public Optional&lt;User&gt; findById(Long id) {
+<span class="fc" id="L44">        logger.debug(&quot;Finding user by ID: {}&quot;, id);</span>
+<span class="fc" id="L45">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L46">            User user = session.get(User.class, id);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">            if (user != null) {</span>
+<span class="fc" id="L48">                logger.debug(&quot;User found by ID {}: {}&quot;, id, user.getEmail());</span>
+            } else {
+<span class="fc" id="L50">                logger.debug(&quot;User not found by ID: {}&quot;, id);</span>
+            }
+<span class="fc" id="L52">            return Optional.ofNullable(user);</span>
+<span class="fc" id="L53">        } catch (Exception e) {</span>
+<span class="fc" id="L54">            logger.error(&quot;Error finding user by ID: {}&quot;, id, e);</span>
+<span class="fc" id="L55">            throw new RuntimeException(&quot;Failed to find user by ID: &quot; + id, e);</span>
+        }
+    }
+
+    @Override
+    public Optional&lt;User&gt; findByEmail(String email) {
+<span class="fc" id="L61">        logger.debug(&quot;Finding user by email: {}&quot;, email);</span>
+<span class="fc" id="L62">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L63">            User user = session.createQuery(&quot;FROM User u WHERE u.email = :email&quot;, User.class)</span>
+<span class="fc" id="L64">                    .setParameter(&quot;email&quot;, email.toLowerCase())</span>
+<span class="fc" id="L65">                    .uniqueResult();</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (user != null) {</span>
+<span class="fc" id="L67">                logger.debug(&quot;User found by email: {}&quot;, email);</span>
+            } else {
+<span class="fc" id="L69">                logger.debug(&quot;User not found by email: {}&quot;, email);</span>
+            }
+<span class="fc" id="L71">            return Optional.ofNullable(user);</span>
+<span class="fc" id="L72">        } catch (Exception e) {</span>
+<span class="fc" id="L73">            logger.error(&quot;Error finding user by email: {}&quot;, email, e);</span>
+<span class="fc" id="L74">            throw new RuntimeException(&quot;Failed to find user by email: &quot; + email, e);</span>
+        }
+    }
+
+    @Override
+    public List&lt;User&gt; findAll() {
+<span class="fc" id="L80">        logger.debug(&quot;Finding all users&quot;);</span>
+<span class="fc" id="L81">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L82">            return session.createQuery(&quot;FROM User u ORDER BY u.createdAt DESC&quot;, User.class).list();</span>
+<span class="fc" id="L83">        } catch (Exception e) {</span>
+<span class="fc" id="L84">            logger.error(&quot;Error finding all users&quot;, e);</span>
+<span class="fc" id="L85">            throw new RuntimeException(&quot;Failed to retrieve users&quot;, e);</span>
+        }
+    }
+
+    @Override
+    public List&lt;User&gt; findAll(int page, int size) {
+<span class="fc" id="L91">        logger.debug(&quot;Finding users - page: {}, size: {}&quot;, page, size);</span>
+<span class="fc" id="L92">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L93">            return session.createQuery(&quot;FROM User u ORDER BY u.createdAt DESC&quot;, User.class)</span>
+<span class="fc" id="L94">                    .setFirstResult((page - 1) * size)</span>
+<span class="fc" id="L95">                    .setMaxResults(size)</span>
+<span class="fc" id="L96">                    .list();</span>
+<span class="nc" id="L97">        } catch (Exception e) {</span>
+<span class="nc" id="L98">            logger.error(&quot;Error finding users with pagination&quot;, e);</span>
+<span class="nc" id="L99">            throw new RuntimeException(&quot;Failed to retrieve users with pagination&quot;, e);</span>
+        }
+    }
+
+    @Override
+    public User update(User user) {
+<span class="fc" id="L105">        Transaction tx = null;</span>
+<span class="fc" id="L106">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L107">            tx = session.beginTransaction();</span>
+<span class="fc" id="L108">            User mergedUser = session.merge(user);</span>
+<span class="fc" id="L109">            tx.commit();</span>
+<span class="fc" id="L110">            return mergedUser;</span>
+<span class="fc" id="L111">        } catch (Exception e) {</span>
+<span class="pc bpc" id="L112" title="2 of 4 branches missed.">            if (tx != null &amp;&amp; tx.isActive()) {</span>
+<span class="fc" id="L113">                tx.rollback();</span>
+            }
+<span class="fc" id="L115">            throw new RuntimeException(&quot;Failed to update user: &quot; + e.getMessage(), e);</span>
+        }
+    }
+
+    @Override
+    public boolean delete(Long id) {
+<span class="fc" id="L121">        logger.debug(&quot;Deleting user with ID: {}&quot;, id);</span>
+<span class="fc" id="L122">        Transaction tx = null;</span>
+<span class="fc" id="L123">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L124">            tx = session.beginTransaction();</span>
+<span class="fc" id="L125">            User user = session.get(User.class, id);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (user != null) {</span>
+<span class="fc" id="L127">                session.remove(user);</span>
+<span class="fc" id="L128">                tx.commit();</span>
+<span class="fc" id="L129">                logger.info(&quot;User deleted successfully with ID: {}&quot;, id);</span>
+<span class="fc" id="L130">                return true;</span>
+            } else {
+<span class="fc" id="L132">                logger.warn(&quot;User not found for deletion with ID: {}&quot;, id);</span>
+<span class="fc" id="L133">                return false;</span>
+            }
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        } catch (Exception e) {</span>
+<span class="pc bpc" id="L136" title="2 of 4 branches missed.">            if (tx != null &amp;&amp; tx.isActive()) {</span>
+<span class="fc" id="L137">                tx.rollback();</span>
+            }
+<span class="fc" id="L139">            logger.error(&quot;Error deleting user with ID: {}&quot;, id, e);</span>
+<span class="fc" id="L140">            throw new RuntimeException(&quot;Failed to delete user with ID: &quot; + id, e);</span>
+        }
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+<span class="fc" id="L146">        logger.debug(&quot;Checking if user exists with email: {}&quot;, email);</span>
+<span class="fc" id="L147">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L148">            Long count = session.createQuery(&quot;SELECT COUNT(u) FROM User u WHERE u.email = :email&quot;, Long.class)</span>
+<span class="fc" id="L149">                    .setParameter(&quot;email&quot;, email.toLowerCase())</span>
+<span class="fc" id="L150">                    .uniqueResult();</span>
+<span class="pc bpc" id="L151" title="2 of 4 branches missed.">            return count != null &amp;&amp; count &gt; 0;</span>
+<span class="fc" id="L152">        } catch (Exception e) {</span>
+<span class="fc" id="L153">            logger.error(&quot;Error checking email existence: {}&quot;, email, e);</span>
+<span class="fc" id="L154">            throw new RuntimeException(&quot;Failed to check email existence: &quot; + email, e);</span>
+        }
+    }
+
+    @Override
+    public long count() {
+<span class="fc" id="L160">        logger.debug(&quot;Counting all users&quot;);</span>
+<span class="fc" id="L161">        try (Session session = HibernateUtil.getSessionFactory().openSession()) {</span>
+<span class="fc" id="L162">            Long count = session.createQuery(&quot;SELECT COUNT(u) FROM User u&quot;, Long.class)</span>
+<span class="fc" id="L163">                    .uniqueResult();</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">            return count != null ? count : 0;</span>
+<span class="fc" id="L165">        } catch (Exception e) {</span>
+<span class="fc" id="L166">            logger.error(&quot;Error counting users&quot;, e);</span>
+<span class="fc" id="L167">            throw new RuntimeException(&quot;Failed to count users&quot;, e);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

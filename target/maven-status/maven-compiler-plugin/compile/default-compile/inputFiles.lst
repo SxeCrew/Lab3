@@ -1,0 +1,8 @@
+F:\Aston2\src\main\java\com\example\userservice\App.java
+F:\Aston2\src\main\java\com\example\userservice\dao\UserDao.java
+F:\Aston2\src\main\java\com\example\userservice\util\HibernateUtil.java
+F:\Aston2\src\main\java\com\example\userservice\service\UserService.java
+F:\Aston2\src\main\java\com\example\userservice\exception\EmailAlreadyExistsException.java
+F:\Aston2\src\main\java\com\example\userservice\dao\UserDaoImpl.java
+F:\Aston2\src\main\java\com\example\userservice\model\User.java
+F:\Aston2\src\main\java\com\example\userservice\exception\UserNotFoundException.java
